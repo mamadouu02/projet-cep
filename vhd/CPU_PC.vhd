@@ -121,18 +121,24 @@ begin
             when S_Decode =>
                 -- On peut aussi utiliser un case, ...
                 -- et ne pas le faire juste pour les branchements et auipc
+
+                -- lui
                 if status.IR(6 downto 0) = "0110111" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_LUI;
+
+                -- addi
                 elsif status.IR(6 downto 0) = "0010011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_ADDI;
+
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
+                    
                 end if;
 
 ---------- Instructions avec immediat de type U ----------
