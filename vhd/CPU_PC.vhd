@@ -104,8 +104,7 @@ begin
                 -- Aucune action
                 state_d <= S_Init;
 
-            when S_Init =>                cmd.LOGICAL_op <= LOGICAL_and;
-                cmd.DATA_sel <= DATA_from_logical;
+            when S_Init =>
                 -- PC <- RESET_VECTOR
                 cmd.PC_we <= '1';
                 cmd.PC_sel <= PC_rstvec;
@@ -242,8 +241,6 @@ begin
 
             when S_AUIPC =>
                 -- rd <- ImmU + pc
-                cmd.PC_sel <= PC_from_pc;
-                cmd.PC_we <= '1';
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_immU;
                 cmd.DATA_sel <= DATA_from_pc;
