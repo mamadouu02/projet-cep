@@ -33,7 +33,8 @@ architecture RTL of CPU_PC is
         S_ADD,
         S_SLL,
         S_AUIPC,
-        S_SUB
+        S_SUB,
+        S_OR
     );
 
     signal state_d, state_q : State_type;
@@ -154,6 +155,13 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SUB;
                 
+                -- or 
+                elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "110" and status.IR(6 downto 0) = "0110011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_OR;
+
                 -- sll
                 elsif status.IR(14 downto 12) = "001" and status.IR(6 downto 0) = "0110011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
@@ -244,6 +252,19 @@ begin
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_immU;
                 cmd.DATA_sel <= DATA_from_pc;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+                
+            when S_OR =>
+                -- rd <- rs1 or rs2
+                cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+                cmd.LOGICAL_op <= LOGICAL_or;
+                cmd.DATA_sel <= DATA_from_logical;
                 cmd.RF_we <= '1';
                 -- lecture mem[PC]
                 cmd.ADDR_sel <= ADDR_from_pc;
