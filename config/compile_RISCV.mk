@@ -42,9 +42,7 @@ ODFLAGS += --section=.rodata
 ODFLAGS += --section=.sdata
 ODFLAGS += --section=.bss
 ODFLAGS += --section=.irq_vec
-ODFLAGS += --disassembler-options no-aliases,numeric
-ODFLAGS += -D -z
-ODFLAGS += --insn-width=4
+ODFLAGS += -s
 
 # Linker scripts
 LDS_FEMTO := config/libfemto.ld

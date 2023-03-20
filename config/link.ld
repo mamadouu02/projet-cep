@@ -22,19 +22,19 @@ SECTIONS
     PROVIDE(_text_end = .);
   } >ram AT>ram :text
 
-  .rodata : {
+  .rodata ALIGN(4) : {
     PROVIDE(_rodata_start = .);
     *(.rodata .rodata.*)
     PROVIDE(_rodata_end = .);
   } >ram AT>ram :text
 
-  .data : {
+  .data ALIGN(4) : {
     PROVIDE(_data_start = .);
     *(.sdata .sdata.*) *(.data .data.*)
     PROVIDE(_data_end = .);
   } >ram AT>ram :data
 
-  .bss :{
+  .bss ALIGN(4) : {
     PROVIDE(_bss_start = .);
     *(.sbss .sbss.*) *(.bss .bss.*)
     PROVIDE(_bss_end = .);

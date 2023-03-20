@@ -1,91 +1,73 @@
-BEGIN {
-    # Variables globales à usage général
-    address_base = 0x00000000; # TODO On veut 0x1000 ici
-	besoin_balise = 0; # Détermine si on a besoin d'une balise de fin de section. C'est toujours le cas sauf avant la première section.
-	ad_prev = -1;
-    balise = "FFFFFFFF" # Balise de fin de section (constante)
+# On utilise désormais objdump -s pour se faciliter la vie
+# Contenu de la section .text :
+#  1000 930f0000 930f7000 930fc0ff 93004000  ......p.......@.
+#  1010 938f0000 938f3000 938fd0ff 1301c0ff  ......0.........
+#  1020 930f3100 930fd1ff 9301f07f 938f1100  ..1.............
+#  1030 13020080 930ff2ff 13030001 930f0301  ................
+#  1040 930300ff 938f03ff 37040080 1304f4ff  ........7.......
+#  1050 930f1400 9304f0ff 938f1400 938f2403  ..............$.
+#  1060 eff05ffa                             .._.            
+# Contenu de la section .data :
+#  1064 78563412 cacaefbe adde0000 00000000  xV4.............
+#  1074 00000000 0000                        ......
 
-    # Variables pour gérer les demi-mots
-	incomplete = 0; # Indique si un premier demi-mot à été détecté
-    half = 0; # Stocke la valeur du premier demi-mot
+function swapbytes(drow) {
+    return substr(drow, 7, 2) substr(drow, 5, 2) substr(drow, 3, 2) substr(drow, 1, 2)
 }
 
-# Détection des sections
-/^[0-9a-f]+ /{
-    ad  = (strtonum("0x" $1) - address_base) / 4; # Normalisation par rapport à l'adresse de base et adressage en mot de 32 bit pour le format .mem
-    formated_ad = sprintf("%08x", ad); # Adresse formatée
-    if (ad != ad_prev) {
-        # Affichage d'une sentinelle de fin de section
-	    if (besoin_balise) print balise;
-        # Affichage de début de section
-	    print "@" formated_ad; 
+function writemem(addr, section) {
+    printf("@%08x\n", addr) # Adresse formatée
+    # On a aligné sur un multiple de 8, let's go
+    for (i = 1; i < length(section); i += 8) {
+        print(substr(section, i, 8));
     }
-    besoin_balise = 1;
-    # MAJ de l'adresse precedente
-    ad_prev = ad;
+    print "FFFFFFFF" # Balise de fin de section (constante)
 }
 
+# Ligne donnant l'info de la section
+# Toujours trouvée avant le reste
+/^Contenu|^Contents/ {
+    if (content) {
+        writemem(start_addr, content)
+    }
+    # En toute logique on pourrait mettre là le nom de section, mais
+    # ça dépend de la locale, donc pour l'instant on laisse tomber
+    section = 1
+    content = ""
+}
 
-# Détection des instructions/données
-/^\s*[0-9a-f]+:\s/{
-	#Strip du :
-	ad=$1
-	gsub(":", "", ad);
-	ad  = int((strtonum("0x" ad) - address_base) / 4); # Contient l'adresse normalisée de la donnée
-    formated_ad = sprintf("%08x", ad); # Adresse formatée
-	
-    if(length($2)==4){ # Cas où la valeur est sous la forme d'un demi mot (format du .data)
+/^\s*[0-9a-f]+/ {
+    if (section) {
+        addr = strtonum("0x" $1)
+        start_addr = strtonum("0x" $1) / 4
+        if (addr != start_addr * 4) {
+            print("Début de section non alignée : "addr) > "/dev/stderr"
+            exit
+        }
+        section = 0;
+    }
 
-	    if (ad == ad_prev) {
-		    # Test pour savoir si on a deja vu un demi mot 
-	        if (incomplete == 0) {
-		    #On stock le demi mot de l'adresse courante
-	            half = $2
-		    # Incomplete == 1 indique qu'on a recuperer la premiere partie du mot
-	            incomplete = 1;
-	        } 
-            else {
-		    # On affiche un mot composé des deux demi mots
-               print $2 half ;
-		    # Initialisation de incomplete
-               incomplete = 0;
-		       ad_prev += 1;
+    for (i = 2; i <= NR; i++) {
+        v = $i
+        if (v ~ /[0-9a-f]{2,8}/) {
+            # Le dernier nombre peut avoir une taille 2, 4, 6, 8
+            if (length(v) == 6) {
+                v = v "00"
+            } else if (length($i) == 4) {
+                v = v "0000"
+            } else if (length($i) == 2) {
+                v = v "000000"
+            } else if (length($i) != 8) {
+                # Pour la partie avec les '.'
+                continue;
             }
-	    } 
-        else {
-		    if (besoin_balise) print balise;
-		    print "@" formated_ad;
-	        if (incomplete == 0) {
-		        half = $2
-		        incomplete = 1;
-	            } 
-            else {
-	            print $2 half " " ;
-	            incomplete = 0;
-	        }   
-		    ad_prev=ad;
-	    }
-	    besoin_balise = 1;
-	}
-	else { # Cas ou la valeur est sous la forme d'un mot complet
-	    if (ad != ad_prev) {
-		    if (besoin_balise) {
-                print balise;
-            }
-		    print "@" formated_ad;
-		    ad_prev=ad;
-	    }
-		print $2
-	    # Incrementation de l'adresse precedente
-	    ad_prev += 1;
-	    besoin_balise = 1;
+            content = content swapbytes(v)
+        }
     }
 }
 
 END {
-	if (incomplete == 1)
-        print "0000" half; # Cas ou la derniere ligne de code est un .int
-	if (ad_prev < 0x2000/4)
-		print balise;
+    if (content) {
+        writemem(start_addr, content)
+    }
 }
-
