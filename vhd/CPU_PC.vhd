@@ -209,6 +209,19 @@ begin
                 -- next state
                 state_d <= S_Fetch;
 
+            when S_AUIPC =>
+                -- rd <- ImmU + PC
+                cmd.PC_X_sel <= PC_X_pc;
+                cmd.PC_Y_sel <= PC_Y_immU;
+                cmd.DATA_sel <= DATA_from_pc;
+                cmd.RF_we <= '1';
+                -- PC = PC + 4
+                cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                cmd.PC_sel <= PC_from_pc;
+                cmd.PC_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
 ---------- Instructions arithmétiques et logiques ----------
 
             when S_ADDI =>
@@ -262,19 +275,6 @@ begin
                 cmd.mem_we <= '0';
                 -- next state
                 state_d <= S_Fetch;
-
-            when S_AUIPC =>
-                -- rd <- ImmU + pc
-                cmd.PC_X_sel <= PC_X_pc;
-                cmd.PC_Y_sel <= PC_Y_immU;
-                cmd.DATA_sel <= DATA_from_pc;
-                cmd.RF_we <= '1';
-                -- lecture mem[PC]
-                cmd.ADDR_sel <= ADDR_from_pc;
-                cmd.mem_ce <= '1';
-                cmd.mem_we <= '0';
-                -- next state
-                state_d <= S_Fetch;
                 
             when S_OR =>
                 -- rd <- rs1 or rs2
@@ -290,7 +290,7 @@ begin
                 state_d <= S_Fetch;
             
             when S_ORI =>
-                -- rd <- rs1 or immI
+                -- rd <- rs1 or ImmI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.LOGICAL_op <= LOGICAL_or;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -303,7 +303,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_AND =>
-                -- rd <- rs1 or immI
+                -- rd <- rs1 and ImmI
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.LOGICAL_op <= LOGICAL_and;
                 cmd.DATA_sel <= DATA_from_logical;
