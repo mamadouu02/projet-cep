@@ -30,7 +30,8 @@ architecture RTL of CPU_PC is
         S_Decode,
         S_LUI,
         S_ADDI,
-        S_ADD
+        S_ADD,
+        S_SLL
     );
 
     signal state_d, state_q : State_type;
@@ -139,11 +140,18 @@ begin
                     state_d <= S_ADDI;
 
                 -- add
-                elsif status.IR(6 downto 0) = "0110011" then
+                elsif status.IR(14 downto 12) = "000" and status.IR(6 downto 0) = "0110011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_ADD;
+                
+                -- sll
+                elsif status.IR(14 downto 12) = "001" and status.IR(6 downto 0) = "0110011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SLL;
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
@@ -185,6 +193,19 @@ begin
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.ALU_op <= ALU_plus;
                 cmd.DATA_sel <= DATA_from_alu;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SLL =>
+                -- rd <- rs1 << rs2
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_rs2;
+                cmd.SHIFTER_op <= SHIFT_ll;
+                cmd.DATA_sel <= DATA_from_shifter;
                 cmd.RF_we <= '1';
                 -- lecture mem[PC]
                 cmd.ADDR_sel <= ADDR_from_pc;
