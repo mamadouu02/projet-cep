@@ -5,5 +5,5 @@
 
 	# max_cycle 50
 	# pout_start
-	# FFFF1004
+	# FFFF1000
 	# pout_end
