@@ -29,7 +29,8 @@ architecture RTL of CPU_PC is
         S_Fetch,
         S_Decode,
         S_LUI,
-        S_ADDI
+        S_ADDI,
+        S_ADD
     );
 
     signal state_d, state_q : State_type;
@@ -59,12 +60,12 @@ begin
         cmd.SHIFTER_op        <= UNDEFINED;
         cmd.SHIFTER_Y_sel     <= UNDEFINED;
 
-        cmd.RF_we             <= 'U';
+        cmd.RF_we             <= '0';
         cmd.RF_SIZE_sel       <= UNDEFINED;
-        cmd.RF_SIGN_enable    <= 'U';
+        cmd.RF_SIGN_enable    <= '0';
         cmd.DATA_sel          <= UNDEFINED;
 
-        cmd.PC_we             <= 'U';
+        cmd.PC_we             <= '0';
         cmd.PC_sel            <= UNDEFINED;
 
         cmd.PC_X_sel          <= UNDEFINED;
@@ -72,14 +73,14 @@ begin
 
         cmd.TO_PC_Y_sel       <= UNDEFINED;
 
-        cmd.AD_we             <= 'U';
+        cmd.AD_we             <= '0';
         cmd.AD_Y_sel          <= UNDEFINED;
 
-        cmd.IR_we             <= 'U';
+        cmd.IR_we             <= '0';
 
         cmd.ADDR_sel          <= UNDEFINED;
-        cmd.mem_we            <= 'U';
-        cmd.mem_ce            <= 'U';
+        cmd.mem_we            <= '0';
+        cmd.mem_ce            <= '0';
 
         cmd.cs.CSR_we            <= UNDEFINED;
 
@@ -87,8 +88,8 @@ begin
         cmd.cs.CSR_sel           <= UNDEFINED;
         cmd.cs.MEPC_sel          <= UNDEFINED;
 
-        cmd.cs.MSTATUS_mie_set   <= 'U';
-        cmd.cs.MSTATUS_mie_reset <= 'U';
+        cmd.cs.MSTATUS_mie_set   <= '0';
+        cmd.cs.MSTATUS_mie_reset <= '0';
 
         cmd.cs.CSR_WRITE_mode    <= UNDEFINED;
 
@@ -100,7 +101,8 @@ begin
                 -- Aucune action
                 state_d <= S_Init;
 
-            when S_Init =>
+            when S_Init =>                cmd.LOGICAL_op <= LOGICAL_and;
+                cmd.DATA_sel <= DATA_from_logical;
                 -- PC <- RESET_VECTOR
                 cmd.PC_we <= '1';
                 cmd.PC_sel <= PC_rstvec;
@@ -136,6 +138,13 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_ADDI;
 
+                -- add
+                elsif status.IR(6 downto 0) = "0110011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_ADD;
+
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
                     
@@ -161,6 +170,19 @@ begin
             when S_ADDI =>
                 -- rd <- rs1 + ImmI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
+                cmd.ALU_op <= ALU_plus;
+                cmd.DATA_sel <= DATA_from_alu;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_ADD =>
+                -- rd <- rs1 + rs2
+                cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.ALU_op <= ALU_plus;
                 cmd.DATA_sel <= DATA_from_alu;
                 cmd.RF_we <= '1';
