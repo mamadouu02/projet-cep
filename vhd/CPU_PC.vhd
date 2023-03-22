@@ -39,7 +39,12 @@ architecture RTL of CPU_PC is
         S_ANDI,
         S_XOR,
         S_XORI,
-        S_SLL
+        S_SLL,
+        S_SLLI,
+        S_SRA,
+        S_SRAI,
+        S_SRL,
+        S_SRLI
     );
 
     signal state_d, state_q : State_type;
@@ -213,6 +218,45 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SLL;
 
+                -- slli
+                elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "001" and status.IR(6 downto 0) = "0010011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SLLI;
+
+
+                -- sra
+                elsif status.IR(31 downto 25) = "0100000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0110011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SRA;
+
+
+                -- srai
+                elsif status.IR(31 downto 25) = "0100000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0010011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SRAI;
+
+
+                -- srl
+                elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0110011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SRL;
+
+
+                -- srli
+                elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0010011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SRLI;
+
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
                     
@@ -369,6 +413,71 @@ begin
                 -- rd <- rs1 << rs2
                 cmd.SHIFTER_Y_sel <= SHIFTER_Y_rs2;
                 cmd.SHIFTER_op <= SHIFT_ll;
+                cmd.DATA_sel <= DATA_from_shifter;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SLLI =>
+                -- rd <- rs1 << ImmR
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
+                cmd.SHIFTER_op <= SHIFT_ll;
+                cmd.DATA_sel <= DATA_from_shifter;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SRA =>
+                -- rd <- rs1 >> rs2
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_rs2;
+                cmd.SHIFTER_op <= SHIFT_ra;
+                cmd.DATA_sel <= DATA_from_shifter;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SRAI =>
+                -- rd <- rs1 >> ImmR
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
+                cmd.SHIFTER_op <= SHIFT_ra;
+                cmd.DATA_sel <= DATA_from_shifter;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SRL =>
+                -- rd <- rs1 >> rs2
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_rs2;
+                cmd.SHIFTER_op <= SHIFT_rl;
+                cmd.DATA_sel <= DATA_from_shifter;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
+            when S_SRLI =>
+                -- rd <- rs1 >> ImmR
+                cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
+                cmd.SHIFTER_op <= SHIFT_rl;
                 cmd.DATA_sel <= DATA_from_shifter;
                 cmd.RF_we <= '1';
                 -- lecture mem[PC]
