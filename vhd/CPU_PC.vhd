@@ -45,7 +45,8 @@ architecture RTL of CPU_PC is
         S_SRAI,
         S_SRL,
         S_SRLI,
-        S_SLT,
+        S_SET,
+        S_SET_I,
         S_BRANCH
     );
 
@@ -258,12 +259,19 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SRLI;
 
-                -- slt
-                elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0110011" then
+                -- slt, sltu 
+                elsif status.IR(31 downto 25) = "0000000" and (status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "011") and status.IR(6 downto 0) = "0110011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_SLT;
+                    state_d <= S_SET;
+
+                -- slti, sltiu 
+                elsif (status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "011") and status.IR(6 downto 0) = "0010011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SET_I;
 
                 -- beq, bge, bgeu, blt, bltu, bne
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "111" or status.IR(14 downto 12) = "100" 
@@ -502,7 +510,7 @@ begin
 
 ---------- Instructions de saut ----------
 
-            when S_SLT =>
+            when S_SET =>
                 -- if rs1 < rs2 => rd <- 1
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.DATA_sel <= DATA_from_slt;
@@ -514,8 +522,20 @@ begin
                 -- next state
                 state_d <= S_Fetch;
 
+            when S_SET_I =>
+                -- if rs1 < immI => rd <- 1
+                cmd.ALU_Y_sel <= ALU_Y_immI;
+                cmd.DATA_sel <= DATA_from_slt;
+                cmd.RF_we <= '1';
+                -- lecture mem[PC]
+                cmd.ADDR_sel <= ADDR_from_pc;
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_Fetch;
+
             when S_BRANCH =>
-                -- if rs1 = rs2 => PC = PC + ImmB
+                -- if rs1 ~ rs2 => PC = PC + ImmB
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 if status.JCOND then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
