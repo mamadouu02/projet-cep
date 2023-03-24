@@ -46,7 +46,7 @@ architecture RTL of CPU_PC is
         S_SRL,
         S_SRLI,
         S_SLT,
-        S_BEQ
+        S_BRANCH
     );
 
     signal state_d, state_q : State_type;
@@ -265,9 +265,10 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SLT;
 
-                -- beq
-                elsif status.IR(14 downto 12) = "000" and status.IR(6 downto 0) = "1100011" then
-                    state_d <= S_BEQ;
+                -- beq, bge, bgeu, blt, bltu, bne
+                elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "111" or status.IR(14 downto 12) = "100" 
+                or status.IR(14 downto 12) = "110" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "1100011" then
+                    state_d <= S_BRANCH;
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
@@ -513,7 +514,7 @@ begin
                 -- next state
                 state_d <= S_Fetch;
 
-            when S_BEQ =>
+            when S_BRANCH =>
                 -- if rs1 = rs2 => PC = PC + ImmB
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 if status.JCOND then
@@ -525,7 +526,7 @@ begin
                 cmd.PC_we <= '1';
                 -- next state
                 state_d <= S_Pre_Fetch;
-
+            
 ---------- Instructions de chargement à partir de la mémoire ----------
 
 ---------- Instructions de sauvegarde en mémoire ----------
