@@ -23,16 +23,16 @@ architecture RTL of CPU_CND is
 
 begin
 
-ext <= ((not IR(13)) and IR(6)) or ((not IR(6)) and (not IR(12)));
+ext <= (not IR(13) and IR(6)) or (not IR(6) and not IR(12));
 
 x <= signed(rs1(31) & rs1) when ext = '1' else signed('0' & rs1);
 y <= signed(alu_y(31) & alu_y) when ext = '1' else signed('0' & alu_y);
 res <= x - y;
 
 s <= res(32);
-z <= '1' when res = "000000000000000000000000000000000" else '0';
+z <= '1' when res = signed('0' & w32_zero) else '0';
 
 slt <= s;
-jcond <= ((not IR(14)) and (IR(12) xor z)) or ((s xor IR(12)) and IR(14));
+jcond <= (not IR(14) and (IR(12) xor z)) or ((s xor IR(12)) and IR(14));
 
 end architecture;
