@@ -47,7 +47,11 @@ architecture RTL of CPU_PC is
         S_SRLI,
         S_SET,
         S_SET_I,
-        S_BRANCH
+        S_BRANCH,
+        S_LW_ADDR,
+        S_LW_DATA,
+        S_SW_ADDR,
+        S_SW_DATA
     );
 
     signal state_d, state_q : State_type;
@@ -277,6 +281,20 @@ begin
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "111" or status.IR(14 downto 12) = "100" 
                 or status.IR(14 downto 12) = "110" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "1100011" then
                     state_d <= S_BRANCH;
+
+                -- lw 
+                elsif status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0000011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_LW_ADDR;
+                
+                -- sw 
+                elsif status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0100011" then
+                    cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+                    cmd.PC_sel <= PC_from_pc;
+                    cmd.PC_we <= '1';
+                    state_d <= S_SW_ADDR;
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
@@ -523,7 +541,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_SET_I =>
-                -- if rs1 < immI => rd <- 1
+                -- if rs1 < ImmI => rd <- 1
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.DATA_sel <= DATA_from_slt;
                 cmd.RF_we <= '1';
@@ -549,7 +567,45 @@ begin
             
 ---------- Instructions de chargement à partir de la mémoire ----------
 
+            when S_LW_ADDR =>
+                -- rd <- mem[ImmI + rs1]
+                cmd.AD_Y_sel <= AD_Y_immI;
+                cmd.AD_we <= '1';
+                cmd.ADDR_sel <= ADDR_from_ad;
+                -- lecture memoire
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                -- next state
+                state_d <= S_LW_DATA;
+            
+            when S_LW_DATA =>
+                -- lecture memoire
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '0';
+                cmd.RF_SIZE_sel <= RF_SIZE_word;
+                -- rd <- mem[ImmI + rs1]
+                cmd.DATA_sel <= DATA_from_mem;
+                cmd.RF_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
 ---------- Instructions de sauvegarde en mémoire ----------
+
+            when S_SW_ADDR =>
+                -- mem[ImmS + rs1] <- rs2
+                cmd.AD_Y_sel <= AD_Y_immS;
+                cmd.AD_we <= '1';
+                -- next state
+                state_d <= S_SW_DATA;
+
+            when S_SW_DATA =>
+                -- ecriture memoire
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '1';
+                cmd.RF_SIZE_sel <= RF_SIZE_word;
+                cmd.ADDR_sel <= ADDR_from_ad;
+                -- next state
+                state_d <= S_Pre_Fetch;
 
 ---------- Instructions d'accès aux CSR ----------
 
