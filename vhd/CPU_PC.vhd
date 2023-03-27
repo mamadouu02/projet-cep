@@ -49,6 +49,7 @@ architecture RTL of CPU_PC is
         S_SET_I,
         S_BRANCH,
         S_LW_ADDR,
+        S_LW_PPP,
         S_LW_DATA,
         S_SW_ADDR,
         S_SW_DATA
@@ -571,21 +572,23 @@ begin
                 -- rd <- mem[ImmI + rs1]
                 cmd.AD_Y_sel <= AD_Y_immI;
                 cmd.AD_we <= '1';
-                cmd.ADDR_sel <= ADDR_from_ad;
-                -- lecture memoire
-                cmd.mem_ce <= '1';
-                cmd.mem_we <= '0';
                 -- next state
-                state_d <= S_LW_DATA;
-            
-            when S_LW_DATA =>
+                state_d <= S_LW_PPP;
+
+            when S_LW_PPP => 
                 -- lecture memoire
                 cmd.mem_ce <= '1';
                 cmd.mem_we <= '0';
-                cmd.RF_SIZE_sel <= RF_SIZE_word;
+                cmd.ADDR_sel <= ADDR_from_ad;
+                 -- next state
+                state_d <= S_LW_DATA;
+
+            when S_LW_DATA =>
                 -- rd <- mem[ImmI + rs1]
+                cmd.RF_SIZE_sel <= RF_SIZE_word;
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
+                cmd.RF_SIGN_enable <= '1';
                 -- next state
                 state_d <= S_Pre_Fetch;
 
