@@ -48,8 +48,8 @@ architecture RTL of CPU_PC is
         S_SET,
         S_SET_I,
         S_BRANCH,
+        S_LW,
         S_LW_ADDR,
-        S_LW_PPP,
         S_LW_DATA,
         S_SW_ADDR,
         S_SW_DATA
@@ -288,7 +288,7 @@ begin
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_LW_ADDR;
+                    state_d <= S_LW;
                 
                 -- sw 
                 elsif status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0100011" then
@@ -568,14 +568,13 @@ begin
             
 ---------- Instructions de chargement à partir de la mémoire ----------
 
-            when S_LW_ADDR =>
-                -- rd <- mem[ImmI + rs1]
+            when S_LW =>
                 cmd.AD_Y_sel <= AD_Y_immI;
                 cmd.AD_we <= '1';
                 -- next state
-                state_d <= S_LW_PPP;
+                state_d <= S_LW_ADDR;
 
-            when S_LW_PPP => 
+            when S_LW_ADDR => 
                 -- lecture memoire
                 cmd.mem_ce <= '1';
                 cmd.mem_we <= '0';
@@ -586,9 +585,9 @@ begin
             when S_LW_DATA =>
                 -- rd <- mem[ImmI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_word;
+                cmd.RF_SIGN_enable <= '1';
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
-                cmd.RF_SIGN_enable <= '1';
                 -- next state
                 state_d <= S_Pre_Fetch;
 
