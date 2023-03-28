@@ -48,9 +48,13 @@ architecture RTL of CPU_PC is
         S_SET,
         S_SET_I,
         S_BRANCH,
+        S_LOADS,
+        S_LOADS_ADDR,
+        S_LB, 
+        S_LBU, 
+        S_LH, 
+        S_LHU,
         S_LW,
-        S_LW_ADDR,
-        S_LW_DATA,
         S_STORES,
         S_SB, 
         S_SH,
@@ -285,12 +289,12 @@ begin
                 or status.IR(14 downto 12) = "110" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "1100011" then
                     state_d <= S_BRANCH;
 
-                -- lw 
-                elsif status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0000011" then
+                -- lb, lbu, lh, lhu, lw
+                elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "100" or status.IR(14 downto 12) = "001" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "010") and status.IR(6 downto 0) = "0000011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_LW;
+                    state_d <= S_LOADS;
                 
                 -- sb, sh, sw
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "0100011" then
@@ -570,21 +574,67 @@ begin
             
 ---------- Instructions de chargement à partir de la mémoire ----------
 
-            when S_LW =>
+            when S_LOADS =>
                 cmd.AD_Y_sel <= AD_Y_immI;
                 cmd.AD_we <= '1';
                 -- next state
-                state_d <= S_LW_ADDR;
+                state_d <= S_LOADS_ADDR;
 
-            when S_LW_ADDR => 
+            when S_LOADS_ADDR => 
                 -- lecture memoire
                 cmd.mem_ce <= '1';
                 cmd.mem_we <= '0';
                 cmd.ADDR_sel <= ADDR_from_ad;
                  -- next state
-                state_d <= S_LW_DATA;
+                if status.IR(14 downto 12) = "000" then
+                    state_d <= S_LB;
+                elsif status.IR(14 downto 12) = "100" then 
+                    state_d <= S_LBU;
+                elsif status.IR(14 downto 12) = "001" then 
+                    state_d <= S_LH;
+                elsif status.IR(14 downto 12) = "101" then 
+                    state_d <= S_LHU;
+                else 
+                    state_d <= S_LW;
+                end if;
 
-            when S_LW_DATA =>
+            when S_LB =>
+                -- rd <- mem[ImmI + rs1]
+                cmd.RF_SIZE_sel <= RF_SIZE_byte;
+                cmd.RF_SIGN_enable <= '1';
+                cmd.DATA_sel <= DATA_from_mem;
+                cmd.RF_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_LBU =>
+                -- rd <- mem[ImmI + rs1]
+                cmd.RF_SIZE_sel <= RF_SIZE_byte;
+                cmd.RF_SIGN_enable <= '0';
+                cmd.DATA_sel <= DATA_from_mem;
+                cmd.RF_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_LH =>
+                -- rd <- mem[ImmI + rs1]
+                cmd.RF_SIZE_sel <= RF_SIZE_half;
+                cmd.RF_SIGN_enable <= '1';
+                cmd.DATA_sel <= DATA_from_mem;
+                cmd.RF_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_LHU =>
+                -- rd <- mem[ImmI + rs1]
+                cmd.RF_SIZE_sel <= RF_SIZE_half;
+                cmd.RF_SIGN_enable <= '0';
+                cmd.DATA_sel <= DATA_from_mem;
+                cmd.RF_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_LW =>
                 -- rd <- mem[ImmI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_word;
                 cmd.RF_SIGN_enable <= '1';
