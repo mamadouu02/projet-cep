@@ -28,4 +28,6 @@ BLT
 BLTU
 BNE
 LW
+SB
+SH
 SW

@@ -51,8 +51,10 @@ architecture RTL of CPU_PC is
         S_LW,
         S_LW_ADDR,
         S_LW_DATA,
-        S_SW_ADDR,
-        S_SW_DATA
+        S_STORES,
+        S_SB, 
+        S_SH,
+        S_SW
     );
 
     signal state_d, state_q : State_type;
@@ -290,12 +292,12 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_LW;
                 
-                -- sw 
-                elsif status.IR(14 downto 12) = "010" and status.IR(6 downto 0) = "0100011" then
+                -- sb, sh, sw
+                elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "0100011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_SW_ADDR;
+                    state_d <= S_STORES;
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
@@ -593,14 +595,38 @@ begin
 
 ---------- Instructions de sauvegarde en mémoire ----------
 
-            when S_SW_ADDR =>
+            when S_STORES =>
                 -- mem[ImmS + rs1] <- rs2
                 cmd.AD_Y_sel <= AD_Y_immS;
                 cmd.AD_we <= '1';
                 -- next state
-                state_d <= S_SW_DATA;
+                if status.IR(14 downto 12) = "000" then
+                    state_d <= S_SB;
+                elsif status.IR(14 downto 12) = "001" then 
+                    state_d <= S_SH;
+                else 
+                    state_d <= S_SW;
+                end if; 
 
-            when S_SW_DATA =>
+            when S_SB =>
+                -- ecriture memoire
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '1';
+                cmd.RF_SIZE_sel <= RF_SIZE_byte;
+                cmd.ADDR_sel <= ADDR_from_ad;
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_SH =>
+                -- ecriture memoire
+                cmd.mem_ce <= '1';
+                cmd.mem_we <= '1';
+                cmd.RF_SIZE_sel <= RF_SIZE_half;
+                cmd.ADDR_sel <= ADDR_from_ad;
+                -- next state
+                state_d <= S_Pre_Fetch;
+
+            when S_SW =>
                 -- ecriture memoire
                 cmd.mem_ce <= '1';
                 cmd.mem_we <= '1';
