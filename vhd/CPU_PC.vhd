@@ -48,6 +48,8 @@ architecture RTL of CPU_PC is
         S_SET,
         S_SET_I,
         S_BRANCH,
+        S_JAL,
+        S_JALR,
         S_LOADS,
         S_LOADS_ADDR,
         S_LB, 
@@ -288,7 +290,15 @@ begin
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "111" or status.IR(14 downto 12) = "100" 
                 or status.IR(14 downto 12) = "110" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "1100011" then
                     state_d <= S_BRANCH;
-
+                    
+                -- jal
+                elsif status.IR(6 downto 0) = "1101111" then
+                    state_d <= S_JAL;
+		
+		        -- jalr
+                elsif status.IR(14 downto 12) = "000" and status.IR(6 downto 0) = "1100111" then
+                    state_d <= S_JALR;
+                
                 -- lb, lbu, lh, lhu, lw
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "100" or status.IR(14 downto 12) = "001" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "010") and status.IR(6 downto 0) = "0000011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
@@ -571,7 +581,34 @@ begin
                 cmd.PC_we <= '1';
                 -- next state
                 state_d <= S_Pre_Fetch;
-            
+                
+           when S_JAL =>
+                -- rd = pc + 4
+                cmd.PC_X_sel <= PC_X_pc;
+                cmd.PC_Y_sel <= PC_Y_cst_x04;
+                cmd.DATA_sel <= DATA_from_pc;
+            	cmd.RF_we <= '1';
+            	-- pc = pc + immJ        
+                cmd.TO_PC_Y_sel <= TO_PC_Y_immJ;
+                cmd.PC_sel <= PC_from_pc;               
+                cmd.PC_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+               
+           when S_JALR =>
+           	-- rd = pc + 4
+                cmd.PC_X_sel <= PC_X_pc;
+                cmd.PC_Y_sel <= PC_Y_cst_x04;
+                cmd.DATA_sel <= DATA_from_pc;
+            	cmd.RF_we <= '1';
+            	-- pc = rs1 + immI         
+                cmd.ALU_Y_sel <= ALU_Y_immI;
+                cmd.ALU_op <= ALU_plus; 
+                cmd.PC_sel <= PC_from_alu;            
+                cmd.PC_we <= '1';
+                -- next state
+                state_d <= S_Pre_Fetch;
+                
 ---------- Instructions de chargement à partir de la mémoire ----------
 
             when S_LOADS =>
