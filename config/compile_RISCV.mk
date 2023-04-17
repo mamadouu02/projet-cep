@@ -104,6 +104,20 @@ $(MEM_DIR)/prog.mem: $(PROG_mem)
 	@echo "Selecting mem file $(PROG_mem)"
 	@cp $< $@
 
+$(SIM_DIR)/%: %.c $(MEM_DIR)/%.mem
+	@echo "Generate test : '$@'"
+	@mkdir -p $@
+	cp $(MEM_DIR)/$(PROG).mem $@/test_default.mem
+	# Generate .irq
+	@sed -e 's/#/# /g' < $< |  tr -d '\r' | awk '$$1=="#" && $$2=="irq_start", $$1=="#" && $$2=="irq_end" {if ($$2!~"irq") print $$2}' > $@/test_default.irq
+	# generate .out
+	@sed -e 's/#/# /g' < $< |  tr -d '\r' | awk '$$1=="#" && $$2=="pout_start", $$1=="#" && $$2=="pout_end" {if ($$2!~"pout") print $$2 " " $$3}' | sed -e 's/  *$$//' > $@/test_default.out
+	# generate .setup
+	@sed -e 's/#/# /g' < $< |  tr -d '\r' | awk '$$1=="#" && $$2=="max_cycle" {print $$3}' > $@/test_default.setup ;\
+	if [ ! -s $@/test_default.setup ] ; then echo "100" > $@/test_default.setup ; fi ;\
+	if [ ! -s $@/test_default.irq ] ; then echo "false" >> $@/test_default.setup ;else echo "true" >> $@/test_default.setup ;fi
+	cp $@/* $(SIM_DIR)/
+
 $(SIM_DIR)/%: %.s $(MEM_DIR)/%.mem
 	@echo "Generate test : '$@'"
 	@mkdir -p $@
