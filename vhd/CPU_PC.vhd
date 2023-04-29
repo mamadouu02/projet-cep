@@ -180,7 +180,7 @@ begin
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_LUI;
-                
+
                 -- auipc
                 elsif status.IR(6 downto 0) = "0010111" then
                     state_d <= S_AUIPC;
@@ -287,22 +287,22 @@ begin
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "111" or status.IR(14 downto 12) = "100" 
                 or status.IR(14 downto 12) = "110" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "1100011" then
                     state_d <= S_BRANCH;
-                    
+
                 -- jal
                 elsif status.IR(6 downto 0) = "1101111" then
                     state_d <= S_JAL;
-		
-		-- jalr
+
+		        -- jalr
                 elsif status.IR(14 downto 12) = "000" and status.IR(6 downto 0) = "1100111" then
                     state_d <= S_JALR;
-                
+
                 -- lb, lbu, lh, lhu, lw
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "100" or status.IR(14 downto 12) = "001" or status.IR(14 downto 12) = "101" or status.IR(14 downto 12) = "010") and status.IR(6 downto 0) = "0000011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_LOAD;
-                
+
                 -- sb, sh, sw
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "0100011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
@@ -312,7 +312,7 @@ begin
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
-                    
+
                 end if;
 
 ---------- Instructions avec immediat de type U ----------
@@ -567,7 +567,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_BRANCH =>
-                -- if rs1 ~ rs2 => PC = PC + ImmB
+                -- if rs1 ~ rs2 => PC = PC + immB
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 if status.JCOND then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
@@ -580,12 +580,12 @@ begin
                 state_d <= S_Pre_Fetch;
                 
            when S_JAL =>
-                -- rd = pc + 4
+                -- rd = PC + 4
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_cst_x04;
                 cmd.DATA_sel <= DATA_from_pc;
-            	cmd.RF_we <= '1';
-            	-- pc = pc + immJ        
+		cmd.RF_we <= '1';
+		        -- PC = PC + immJ        
                 cmd.TO_PC_Y_sel <= TO_PC_Y_immJ;
                 cmd.PC_sel <= PC_from_pc;               
                 cmd.PC_we <= '1';
@@ -593,12 +593,12 @@ begin
                 state_d <= S_Pre_Fetch;
                
            when S_JALR =>
-           	    -- rd = pc + 4
+		        -- rd = PC + 4
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_cst_x04;
                 cmd.DATA_sel <= DATA_from_pc;
-            	cmd.RF_we <= '1';
-            	-- pc = rs1 + immI         
+		cmd.RF_we <= '1';
+		        -- PC = rs1 + immI         
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.ALU_op <= ALU_plus; 
                 cmd.PC_sel <= PC_from_alu;            
@@ -680,7 +680,7 @@ begin
 ---------- Instructions de sauvegarde en mémoire ----------
 
             when S_STORE =>
-                -- mem[ImmS + rs1] <- rs2
+                -- mem[immS + rs1] <- rs2
                 cmd.AD_Y_sel <= AD_Y_immS;
                 cmd.AD_we <= '1';
                 -- next state
