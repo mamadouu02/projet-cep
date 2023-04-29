@@ -50,14 +50,14 @@ architecture RTL of CPU_PC is
         S_BRANCH,
         S_JAL,
         S_JALR,
-        S_LOADS,
-        S_LOADS_ADDR,
+        S_LOAD,
+        S_LOAD_ADDR,
         S_LB, 
         S_LBU, 
         S_LH, 
         S_LHU,
         S_LW,
-        S_STORES,
+        S_STORE,
         S_SB, 
         S_SH,
         S_SW
@@ -241,7 +241,6 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SLLI;
 
-
                 -- sra
                 elsif status.IR(31 downto 25) = "0100000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0110011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
@@ -249,14 +248,12 @@ begin
                     cmd.PC_we <= '1';
                     state_d <= S_SRA;
 
-
                 -- srai
                 elsif status.IR(31 downto 25) = "0100000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0010011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
                     state_d <= S_SRAI;
-
 
                 -- srl
                 elsif status.IR(31 downto 25) = "0000000" and status.IR(14 downto 12) = "101" and status.IR(6 downto 0) = "0110011" then
@@ -295,7 +292,7 @@ begin
                 elsif status.IR(6 downto 0) = "1101111" then
                     state_d <= S_JAL;
 		
-		        -- jalr
+		-- jalr
                 elsif status.IR(14 downto 12) = "000" and status.IR(6 downto 0) = "1100111" then
                     state_d <= S_JALR;
                 
@@ -304,14 +301,14 @@ begin
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_LOADS;
+                    state_d <= S_LOAD;
                 
                 -- sb, sh, sw
                 elsif (status.IR(14 downto 12) = "000" or status.IR(14 downto 12) = "010" or status.IR(14 downto 12) = "001") and status.IR(6 downto 0) = "0100011" then
                     cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
                     cmd.PC_sel <= PC_from_pc;
                     cmd.PC_we <= '1';
-                    state_d <= S_STORES;
+                    state_d <= S_STORE;
 
                 else
                     state_d <= S_Error; -- Pour detecter les rates du decodage
@@ -321,7 +318,7 @@ begin
 ---------- Instructions avec immediat de type U ----------
 
             when S_LUI =>
-                -- rd <- ImmU + 0
+                -- rd <- immU + 0
                 cmd.PC_X_sel <= PC_X_cst_x00;
                 cmd.PC_Y_sel <= PC_Y_immU;
                 cmd.DATA_sel <= DATA_from_pc;
@@ -334,7 +331,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_AUIPC =>
-                -- rd <- ImmU + PC
+                -- rd <- immU + PC
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_immU;
                 cmd.DATA_sel <= DATA_from_pc;
@@ -349,7 +346,7 @@ begin
 ---------- Instructions arithmétiques et logiques ----------
 
             when S_ADDI =>
-                -- rd <- rs1 + ImmI
+                -- rd <- rs1 + immI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.ALU_op <= ALU_plus;
                 cmd.DATA_sel <= DATA_from_alu;
@@ -401,7 +398,7 @@ begin
                 state_d <= S_Fetch;
             
             when S_ORI =>
-                -- rd <- rs1 or ImmI
+                -- rd <- rs1 or immI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.LOGICAL_op <= LOGICAL_or;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -414,7 +411,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_AND =>
-                -- rd <- rs1 and ImmI
+                -- rd <- rs1 and immI
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.LOGICAL_op <= LOGICAL_and;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -427,7 +424,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_ANDI =>
-                -- rd <- rs1 andi ImmI
+                -- rd <- rs1 andi immI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.LOGICAL_op <= LOGICAL_and;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -440,7 +437,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_XOR =>
-                -- rd <- rs1 xor ImmI
+                -- rd <- rs1 xor immI
                 cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
                 cmd.LOGICAL_op <= LOGICAL_xor;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -453,7 +450,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_XORI =>
-                -- rd <- rs1 xori ImmI
+                -- rd <- rs1 xori immI
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.LOGICAL_op <= LOGICAL_xor;
                 cmd.DATA_sel <= DATA_from_logical;
@@ -479,7 +476,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_SLLI =>
-                -- rd <- rs1 << ImmR
+                -- rd <- rs1 << immR
                 cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
                 cmd.SHIFTER_op <= SHIFT_ll;
                 cmd.DATA_sel <= DATA_from_shifter;
@@ -505,7 +502,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_SRAI =>
-                -- rd <- rs1 >> ImmR
+                -- rd <- rs1 >> immR
                 cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
                 cmd.SHIFTER_op <= SHIFT_ra;
                 cmd.DATA_sel <= DATA_from_shifter;
@@ -531,7 +528,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_SRLI =>
-                -- rd <- rs1 >> ImmR
+                -- rd <- rs1 >> immR
                 cmd.SHIFTER_Y_sel <= SHIFTER_Y_ir_sh;
                 cmd.SHIFTER_op <= SHIFT_rl;
                 cmd.DATA_sel <= DATA_from_shifter;
@@ -558,7 +555,7 @@ begin
                 state_d <= S_Fetch;
 
             when S_SET_I =>
-                -- if rs1 < ImmI => rd <- 1
+                -- if rs1 < immI => rd <- 1
                 cmd.ALU_Y_sel <= ALU_Y_immI;
                 cmd.DATA_sel <= DATA_from_slt;
                 cmd.RF_we <= '1';
@@ -596,7 +593,7 @@ begin
                 state_d <= S_Pre_Fetch;
                
            when S_JALR =>
-           	-- rd = pc + 4
+           	    -- rd = pc + 4
                 cmd.PC_X_sel <= PC_X_pc;
                 cmd.PC_Y_sel <= PC_Y_cst_x04;
                 cmd.DATA_sel <= DATA_from_pc;
@@ -611,13 +608,13 @@ begin
                 
 ---------- Instructions de chargement à partir de la mémoire ----------
 
-            when S_LOADS =>
+            when S_LOAD =>
                 cmd.AD_Y_sel <= AD_Y_immI;
                 cmd.AD_we <= '1';
                 -- next state
-                state_d <= S_LOADS_ADDR;
+                state_d <= S_LOAD_ADDR;
 
-            when S_LOADS_ADDR => 
+            when S_LOAD_ADDR => 
                 -- lecture memoire
                 cmd.mem_ce <= '1';
                 cmd.mem_we <= '0';
@@ -636,7 +633,7 @@ begin
                 end if;
 
             when S_LB =>
-                -- rd <- mem[ImmI + rs1]
+                -- rd <- mem[immI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_byte;
                 cmd.RF_SIGN_enable <= '1';
                 cmd.DATA_sel <= DATA_from_mem;
@@ -645,7 +642,7 @@ begin
                 state_d <= S_Pre_Fetch;
 
             when S_LBU =>
-                -- rd <- mem[ImmI + rs1]
+                -- rd <- mem[immI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_byte;
                 cmd.RF_SIGN_enable <= '0';
                 cmd.DATA_sel <= DATA_from_mem;
@@ -654,7 +651,7 @@ begin
                 state_d <= S_Pre_Fetch;
 
             when S_LH =>
-                -- rd <- mem[ImmI + rs1]
+                -- rd <- mem[immI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_half;
                 cmd.RF_SIGN_enable <= '1';
                 cmd.DATA_sel <= DATA_from_mem;
@@ -663,7 +660,7 @@ begin
                 state_d <= S_Pre_Fetch;
 
             when S_LHU =>
-                -- rd <- mem[ImmI + rs1]
+                -- rd <- mem[immI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_half;
                 cmd.RF_SIGN_enable <= '0';
                 cmd.DATA_sel <= DATA_from_mem;
@@ -672,7 +669,7 @@ begin
                 state_d <= S_Pre_Fetch;
 
             when S_LW =>
-                -- rd <- mem[ImmI + rs1]
+                -- rd <- mem[immI + rs1]
                 cmd.RF_SIZE_sel <= RF_SIZE_word;
                 cmd.RF_SIGN_enable <= '1';
                 cmd.DATA_sel <= DATA_from_mem;
@@ -682,7 +679,7 @@ begin
 
 ---------- Instructions de sauvegarde en mémoire ----------
 
-            when S_STORES =>
+            when S_STORE =>
                 -- mem[ImmS + rs1] <- rs2
                 cmd.AD_Y_sel <= AD_Y_immS;
                 cmd.AD_we <= '1';
