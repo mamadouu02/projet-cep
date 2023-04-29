@@ -1,13 +1,15 @@
 # TAG = add
 	.text
 
-	addi x1, x0, 0x123   # r1 = r0 + 0x123
-    addi x2, x0, 0x456   # r2 = r0 + 0x456
-	add x31, x0, x1   # r31 = r0 + r1
-	add x31, x1, x2   # r31 = r1 + r2
+    lui x30, 1028        # Chargement d'une valeur quelconque dans x30
+    addi x31, x30, 88    # x31 = x31 + 88
+    add x31, x31, x30    # x31 = x31 + x30
+    lui x30, 0xfffff
+    add x31, x31, x30    # x31 = x31 + x30
 
 	# max_cycle 50
 	# pout_start
-	# 00000123
-	# 00000579
+	# 00404058
+    # 00808058
+    # 00807058
 	# pout_end

@@ -1,12 +1,16 @@
 # TAG = xori
 	.text
 
-	addi x1, x0, 0x001   # r1 = r0 + 0x001
-	xori x31, x0, 0x123   # r31 = r0 xori 0x123
-	xori x31, x1, 0x0   # r31 = r1 xori 0x0
+    lui x30, 0x5090
+    xori x31, x30, 555    # x31 = x30 xori 555
+    addi x30, x30, 123
+    xori x31, x30, 667    # x31 = x30 xori 667
+    xori x31, x0, 789     # x31 = x0 xori 789
+    lui x0, 0
 
 	# max_cycle 50
 	# pout_start
-	# 00000123
-	# 00000001
+	# 0509022B
+    # 050902E0
+    # 00000315
 	# pout_end

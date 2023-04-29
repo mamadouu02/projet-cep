@@ -1,11 +1,15 @@
 # TAG = slli
 	.text
 
-	addi x31, x0, 0x123   # r1 = r0 + 0x123
-	slli x31, x31, 4   # r31 = r31 << r1
+	lui x30, 0xfffff
+    addi x30, x30, 0x001
+    slli x31, x30, 1
+    slli x31, x31, 16
+	slli x31, x31, 31
 
 	# max_cycle 50
 	# pout_start
-	# 00000123
-	# 00001230
+	# ffffe002
+    # e0020000
+	# 00000000
 	# pout_end

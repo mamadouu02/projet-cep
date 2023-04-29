@@ -1,13 +1,13 @@
 # TAG = lui
 	.text
 
-	lui x31, 0       # r31 = 0
-	lui x31, 0xfffff # r31 = 0xfffff
-	lui x31, 0x12345 # r31 = 0x12345
+    lui x31, 0x1        # Chargement de la valeur 1
+    lui x31, 0x5089     # Chargement d'une valeur quelconque
+    lui x31, 0xfffff    # Chargement de la valeur maximale permise
 
 	# max_cycle 50
 	# pout_start
-	# 00000000
-	# FFFFF000
-	# 12345000
+	# 00001000
+    # 05089000
+    # fffff000
 	# pout_end

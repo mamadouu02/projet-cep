@@ -1,13 +1,20 @@
 # TAG = and
 	.text
 
-	addi x1, x0, 0x001   # r1 = r0 + 0x001
-    addi x2, x0, 0x101   # r2 = r0 + 0x101
-	and x31, x0, x1   # r31 = r0 and r1
-	and x31, x1, x2   # r31 = r1 and r2
+    lui x31, 0x4500
+    lui x30, 0x5090
+    and x31, x31, x30   #x31 = x31 and x30
+    lui x30, 0x12345
+    lui x31, 0x67890
+    and x31, x31, x30   #x31 = x31 and x30
+    and x31, x31, x0    #x31 = x31 and x0
+    lui x0, 0
 
 	# max_cycle 50
 	# pout_start
-	# 00000000
-	# 00000001
+	# 04500000
+    # 04000000
+    # 67890000
+    # 02000000
+    # 00000000
 	# pout_end

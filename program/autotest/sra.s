@@ -1,12 +1,16 @@
 # TAG = sra
 	.text
 
-	addi x31, x0, 0x120   # r1 = r0 + 0x120
-    addi x1, x0, 4   # r2 = r0 + 4
-	sra x31, x31, x1   # r31 = r31 >> r1
+    addi x31, x0, 0x001
+	lui x30, 0xfffff
+    addi x30, x30, 0x001
+    sra x31, x30, x31
+    addi x30, x0, 2047
+    sra x31, x31, x30
 
 	# max_cycle 50
 	# pout_start
-	# 00000120
-	# 00000012
+	# 00000001
+    # fffff800
+    # ffffffff
 	# pout_end

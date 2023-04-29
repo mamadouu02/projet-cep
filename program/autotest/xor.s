@@ -1,13 +1,21 @@
 # TAG = xor
 	.text
 
-	addi x1, x0, 0x001   # r1 = r0 + 0x001
-    addi x2, x0, 0x101   # r2 = r0 + 0x101
-	xor x31, x0, x1   # r31 = r0 xor r1
-	xor x31, x1, x2   # r31 = r1 xor r2
+    lui x31, 0x4500
+    lui x30, 0x5090
+    xor x31, x31, x30   # x31 = x31 xor x30
+    lui x30, 0x12345
+    lui x31, 0x67890
+    xor x31, x31, x30   # x31 = x31 xor x30
+    lui x31, 0xfffff
+    xor x31, x31, x30   # x31 = x31 xor x30
 
 	# max_cycle 50
 	# pout_start
-	# 00000001
-	# 00000100
+	# 04500000
+    # 01590000
+    # 67890000
+    # 75BD5000
+    # fffff000
+    # EDCBA000
 	# pout_end

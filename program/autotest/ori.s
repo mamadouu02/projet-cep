@@ -1,12 +1,17 @@
 # TAG = ori
 	.text
 
-	addi x1, x0, 0x001   # r1 = r0 + 0x001
-	ori x31, x0, 0x123   # r31 = r0 ori 0x123
-	ori x31, x1, 0x0   # r31 = r1 ori 0x0
+    lui x30, 0x5090
+    ori x31, x30, 555    # x31 = x30 ori 555
+    lui x30, 0x12345
+    ori x31, x30, 0      # x31 = x30 ori 0x0
+    addi x30, x0, 667
+    ori x31, x30, 1788   # x31 = x30 ori 1788
+    lui x0, 0
 
 	# max_cycle 50
 	# pout_start
-	# 00000123
-	# 00000001
+	# 0509022B
+    # 12345000
+    # 000006ff
 	# pout_end
