@@ -2,9 +2,9 @@
 	.text
 
 	lui x31, 1
-    jalr x1, 12(x31)
-    lui x31, 2
-    lui x31, 3
+	jalr x1, 12(x31)
+	lui x31, 2
+	lui x31, 3
 
 	# max_cycle 50
 	# pout_start
