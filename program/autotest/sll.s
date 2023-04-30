@@ -1,12 +1,21 @@
 # TAG = sll
 	.text
 
-	addi x31, x0, 0x123		# r1 = r0 + 0x123
-	addi x1, x0, 4			# r2 = r0 + 4
-	sll x31, x31, x1		# r31 = r31 << r1
+	addi x31, x0, 0x001
+	lui x30, 0xfffff
+	addi x30, x30, 0x001
+	sll x31, x30, x31
+	addi x31, x0, 0x004
+	sll x31, x30, x31
+	lui x30, 0xfffff
+	addi x30, x30, 0x7ff
+	sll x31, x31, x30
 
 	# max_cycle 50
 	# pout_start
-	# 00000123
-	# 00001230
+	# 00000001
+	# ffffe002
+	# 00000004
+	# ffff0010
+	# 00000000
 	# pout_end
