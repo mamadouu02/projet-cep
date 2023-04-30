@@ -1,13 +1,19 @@
 # TAG = sltu
 	.text
 
-	addi x1, x0, 1
-	addi x2, x0, 2
-	sltu x31, x1, x2
-	sltu x31, x2, x1
+	lui x31, 0x11111
+	lui x30, 0x11110
+	sltu x31, x31, x30
+	lui x30, 0x10000
+	sltu x31, x31, x30
+	lui x31, 0xf0000
+	sltu x31, x31, x30  # Donne 1 pour slt et 0 pour sltu
 
 	# max_cycle 50
 	# pout_start
+	# 11111000
+	# 00000000
 	# 00000001
+	# f0000000
 	# 00000000
 	# pout_end
