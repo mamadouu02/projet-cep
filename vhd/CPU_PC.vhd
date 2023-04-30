@@ -639,7 +639,7 @@ begin
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
                 -- next state
-                state_d <= S_Pre_Fetch;
+                state_d <= S_Fetch;
 
             when S_LBU =>
                 -- rd <- mem[immI + rs1]
@@ -648,7 +648,7 @@ begin
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
                 -- next state
-                state_d <= S_Pre_Fetch;
+                state_d <= S_Fetch;
 
             when S_LH =>
                 -- rd <- mem[immI + rs1]
@@ -657,7 +657,7 @@ begin
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
                 -- next state
-                state_d <= S_Pre_Fetch;
+                state_d <= S_Fetch;
 
             when S_LHU =>
                 -- rd <- mem[immI + rs1]
@@ -666,7 +666,7 @@ begin
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
                 -- next state
-                state_d <= S_Pre_Fetch;
+                state_d <= S_Fetch;
 
             when S_LW =>
                 -- rd <- mem[immI + rs1]
@@ -675,7 +675,7 @@ begin
                 cmd.DATA_sel <= DATA_from_mem;
                 cmd.RF_we <= '1';
                 -- next state
-                state_d <= S_Pre_Fetch;
+                state_d <= S_Fetch;
 
 ---------- Instructions de sauvegarde en mémoire ----------
 
