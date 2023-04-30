@@ -53,5 +53,76 @@ architecture RTL of CPU_CSR is
         return res;
     end CSR_write;
 
+    signal to_csr, to_mepc : w32;
+    signal mtvec_d, mtvec_q : w32;
+    signal mie_d, mie_q : w32;
+    signal mepc_d, mepc_q : w32;
+    signal mstatus_d, mstatus_q : w32;
+    signal mcause_q : w32;
+
 begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if (rst = '1') then
+                mtvec_q <= w32_zero;
+                mie_q <= w32_zero;
+                mepc_q <= w32_zero;
+                mstatus_q <= w32_zero;
+            else
+                mtvec_q <= mtvec_d;
+                mie_q <= mie_d;
+                mepc_q <= mepc_d;
+                mstatus_q <= mstatus_d;
+            end if;
+        end if;
+    end process;
+
+    to_csr <= rs1 when cmd.TO_CSR_sel = TO_CSR_from_rs1 else imm;
+    to_mepc <= to_csr when cmd.MEPC_sel = MEPC_from_csr else pc;
+
+    mtvec <= mtvec_q;
+    mie <= mie_q;
+    mepc <= mepc_q;
+    mip(7) <= mtip;
+    mip(11) <= meip;
+    it <= mstatus_q(3) and irq;
+    csr <=  mcause_q when cmd.CSR_sel = CSR_from_mcause else
+            mepc_q when cmd.CSR_sel = CSR_from_mepc else
+            mtvec_q when cmd.CSR_sel = CSR_from_mtvec else
+            mstatus_q when cmd.CSR_sel = CSR_from_mstatus else
+            mie_q when cmd.CSR_sel = CSR_from_mie else
+            mip when cmd.CSR_sel = CSR_from_mip;
+
+    process(all)
+    begin
+        mtvec_d <= mtvec_q;
+        mie_d <= mie_q;
+        mepc_d <= mepc_q;
+        mstatus_q <= mstatus_d;
+
+        if (irq = '1') then
+            mcause_q <= mcause;
+        end if;
+
+        if (cmd.MSTATUS_mie_set = '1') then
+            mstatus_q(3) = '1';
+        elsif (cmd.MSTATUS_mie_reset = '1') then
+            mstatus_q(3) = '0';
+        end if;
+
+        case cmd.CSR_write_enable is
+            when CSR_mtvec =>
+                mtvec_d <= CSR_WRITE(to_csr, mtvec_q, cmd.CSR_WRITE_mode);
+            when CSR_mie =>
+                mie_d <= CSR_WRITE(to_csr, mie_q, cmd.CSR_WRITE_mode);
+            when CSR_mepc =>
+                mepc_d <= CSR_WRITE(to_mepc, mepc_q, cmd.CSR_WRITE_mode);
+            when CSR_mstatus =>
+                mstatus_d <= CSR_WRITE(to_csr, mstatus_q, cmd.CSR_WRITE_mode);
+        end case;
+
+    end process;
+
 end architecture;
