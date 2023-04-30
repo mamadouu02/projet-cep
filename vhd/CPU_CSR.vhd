@@ -112,16 +112,15 @@ begin
             mstatus_q(3) <= '0';
         end if;
 
-        case cmd.CSR_we is
-            when CSR_mtvec =>
-                mtvec_d <= CSR_WRITE(to_csr, mtvec_q, cmd.CSR_WRITE_mode);
-            when CSR_mie =>
-                mie_d <= CSR_WRITE(to_csr, mie_q, cmd.CSR_WRITE_mode);
-            when CSR_mepc =>
-                mepc_d <= CSR_WRITE(to_mepc, mepc_q, cmd.CSR_WRITE_mode);
-            when CSR_mstatus =>
-                mstatus_d <= CSR_WRITE(to_csr, mstatus_q, cmd.CSR_WRITE_mode);
-        end case;
+        if (cmd.CSR_we = CSR_mtvec) then
+            mtvec_d <= CSR_write(to_csr, mtvec_q, cmd.CSR_write_mode);
+        elsif (cmd.CSR_we = CSR_mie) then
+            mie_d <= CSR_write(to_csr, mie_q, cmd.CSR_write_mode);
+        elsif (cmd.CSR_we = CSR_mepc) then
+            mepc_d <= CSR_write(to_mepc, mepc_q, cmd.CSR_write_mode);
+        elsif (cmd.CSR_we = CSR_mstatus) then
+            mstatus_d <= CSR_write(to_csr, mstatus_q, cmd.CSR_write_mode);
+        end if;
 
     end process;
 
