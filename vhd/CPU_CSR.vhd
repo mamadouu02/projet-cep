@@ -107,12 +107,12 @@ begin
         end if;
 
         if (cmd.MSTATUS_mie_set = '1') then
-            mstatus_q(3) = '1';
+            mstatus_q(3) <= '1';
         elsif (cmd.MSTATUS_mie_reset = '1') then
-            mstatus_q(3) = '0';
+            mstatus_q(3) <= '0';
         end if;
 
-        case cmd.CSR_write_enable is
+        case cmd.CSR_we is
             when CSR_mtvec =>
                 mtvec_d <= CSR_WRITE(to_csr, mtvec_q, cmd.CSR_WRITE_mode);
             when CSR_mie =>
